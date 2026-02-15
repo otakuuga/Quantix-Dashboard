@@ -1,84 +1,49 @@
-import { CandlestickChartCard } from './components/charts/CandlestickChartCard';
-import { LineChartCard } from './components/charts/LineChartCard';
-import { MetricCard } from './components/charts/MetricCard';
-import { PieChartCard } from './components/charts/PieChartCard';
-import { KYCWizard } from './components/kyc/KYCWizard';
+import { DashboardLayout } from './components/layout/DashboardLayout';
 import { ThemeProvider } from './components/theme/ThemeProvider';
-import { ThemeToggle } from './components/theme/ThemeToggle';
-import { TransactionTable } from './components/transactions/TransactionTable';
-import type { AllocationDatum, CandlestickPoint, Metric, TimeSeriesPoint, Transaction } from './types/fintech';
+import { DEFAULT_ROUTE, SESSION_ONE_METRICS } from './data/sessionOneMock';
 
-const metrics: Metric[] = [
-  { id: 'a1', label: 'AUM', value: '$5.42M', delta: 2.23 },
-  { id: 'a2', label: 'Daily Volume', value: '$832K', delta: -1.04 },
-  { id: 'a3', label: 'Verified Accounts', value: '1,284', delta: 4.71 },
-  { id: 'a4', label: 'Failed Transactions', value: '18', delta: -0.93 },
-];
+function SessionOneOverview() {
+  return (
+    <section className="space-y-4 pb-8">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {SESSION_ONE_METRICS.map((metric) => (
+          <article key={metric.id} className="card" aria-label={`${metric.label} metric`}>
+            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{metric.label}</p>
+            <p className="mt-2 text-2xl font-semibold">{metric.value}</p>
+            <p className={metric.delta >= 0 ? 'text-sm text-emerald-600' : 'text-sm text-rose-600'}>
+              {metric.delta >= 0 ? '+' : ''}
+              {metric.delta.toFixed(2)}%
+            </p>
+          </article>
+        ))}
+      </div>
 
-const lineData: TimeSeriesPoint[] = [
-  { timestamp: '09:00', value: 120 },
-  { timestamp: '10:00', value: 146 },
-  { timestamp: '11:00', value: 162 },
-  { timestamp: '12:00', value: 154 },
-  { timestamp: '13:00', value: 190 },
-  { timestamp: '14:00', value: 177 },
-];
-
-const candleData: CandlestickPoint[] = [
-  { timestamp: 'Mon', open: 165, close: 172, low: 158, high: 176 },
-  { timestamp: 'Tue', open: 172, close: 169, low: 164, high: 179 },
-  { timestamp: 'Wed', open: 169, close: 181, low: 166, high: 188 },
-  { timestamp: 'Thu', open: 181, close: 174, low: 170, high: 186 },
-  { timestamp: 'Fri', open: 174, close: 183, low: 171, high: 190 },
-];
-
-const pieData: AllocationDatum[] = [
-  { name: 'Equities', value: 44 },
-  { name: 'Bonds', value: 21 },
-  { name: 'Crypto', value: 18 },
-  { name: 'Cash', value: 17 },
-];
-
-const transactions: Transaction[] = Array.from({ length: 80 }, (_, i) => ({
-  id: `TX-${String(i + 1).padStart(4, '0')}`,
-  timestamp: `2026-02-${String((i % 28) + 1).padStart(2, '0')} 14:${String(i % 60).padStart(2, '0')}`,
-  account: `ACCT-${String((i % 12) + 1001)}`,
-  type: ['deposit', 'withdrawal', 'transfer', 'payment'][i % 4] as Transaction['type'],
-  amount: Number((Math.random() * 5000 + 35).toFixed(2)),
-  currency: ['USD', 'EUR', 'GBP'][i % 3] as Transaction['currency'],
-  status: ['pending', 'completed', 'failed'][i % 3] as Transaction['status'],
-  note: i % 9 === 0 ? 'Manual review required' : undefined,
-}));
+      <div className="grid gap-4 lg:grid-cols-3">
+        <section className="card lg:col-span-2">
+          <h3 className="font-semibold">Architecture Notes</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600 dark:text-slate-300">
+            <li>Theme state is centralized in `ThemeProvider` with system/light/dark support.</li>
+            <li>All business types are unified in `src/types/fintech.ts` for consistent contracts.</li>
+            <li>Dashboard layout composes responsive Sidebar + TopNav shell for future modules.</li>
+          </ul>
+        </section>
+        <section className="card">
+          <h3 className="font-semibold">Module Roadmap</h3>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            Session 1 focuses on app shell and type safety. Sessions 2 and 3 will plug into this layout.
+          </p>
+        </section>
+      </div>
+    </section>
+  );
+}
 
 export function App() {
   return (
     <ThemeProvider>
-      <main className="min-h-screen p-6">
-        <header className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Quantix FinTech UI Kit</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Production-ready dashboard primitives</p>
-          </div>
-          <ThemeToggle />
-        </header>
-
-        <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {metrics.map((metric) => (
-            <MetricCard key={metric.id} metric={metric} />
-          ))}
-        </section>
-
-        <section className="mb-6 grid gap-4 xl:grid-cols-3">
-          <LineChartCard title="Revenue Trend" data={lineData} />
-          <CandlestickChartCard data={candleData} />
-          <PieChartCard data={pieData} />
-        </section>
-
-        <section className="mb-6 grid gap-4 xl:grid-cols-2">
-          <KYCWizard />
-          <TransactionTable transactions={transactions} />
-        </section>
-      </main>
+      <DashboardLayout initialRoute={DEFAULT_ROUTE}>
+        <SessionOneOverview />
+      </DashboardLayout>
     </ThemeProvider>
   );
 }
