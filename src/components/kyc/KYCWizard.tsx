@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -32,25 +31,64 @@ export function KYCWizard() {
     handleSubmit,
     watch,
     setValue,
+    setError,
+    clearErrors,
+    getValues,
     trigger,
     formState: { errors },
   } = useForm<KYCFormData>({
-    resolver: zodResolver(kycSchema),
     defaultValues: { idType: 'passport' },
     mode: 'onBlur',
   });
 
   const progress = useMemo(() => (step / 3) * 100, [step]);
 
+  const validateStep = async () => {
+    if (step === 1) {
+      const fields: (keyof KYCFormData)[] = ['fullName', 'email'];
+      const valid = await trigger(fields);
+      if (!valid) return false;
+
+      const parse = z.object({ fullName: kycSchema.shape.fullName, email: kycSchema.shape.email }).safeParse(getValues());
+      return parse.success;
+    }
+
+    if (step === 2) {
+      const fields: (keyof KYCFormData)[] = ['country', 'idType', 'idNumber'];
+      const valid = await trigger(fields);
+      if (!valid) return false;
+
+      const parse = z
+        .object({
+          country: kycSchema.shape.country,
+          idType: kycSchema.shape.idType,
+          idNumber: kycSchema.shape.idNumber,
+        })
+        .safeParse(getValues());
+      return parse.success;
+    }
+
+    clearErrors('document');
+    return true;
+  };
+
   const next = async () => {
-    const fields: (keyof KYCFormData)[] =
-      step === 1 ? ['fullName', 'email'] : step === 2 ? ['country', 'idType', 'idNumber'] : ['document'];
-    if (await trigger(fields)) {
+    if (await validateStep()) {
       setStep((prev) => Math.min(prev + 1, 3));
     }
   };
 
-  const onSubmit = handleSubmit(() => {
+  const onSubmit = handleSubmit((data) => {
+    const parse = kycSchema.safeParse(data);
+    if (!parse.success) {
+      for (const issue of parse.error.issues) {
+        const field = issue.path[0];
+        if (typeof field === 'string') {
+          setError(field as keyof KYCFormData, { message: issue.message });
+        }
+      }
+      return;
+    }
     setStatus('submitted');
   });
 
@@ -114,10 +152,12 @@ export function KYCWizard() {
               accept="image/*,.pdf"
               onChange={(event) => {
                 const file = event.target.files?.[0];
-                setValue('document', file);
+                setValue('document', file, { shouldDirty: true, shouldTouch: true });
+                clearErrors('document');
               }}
             />
             {watch('document') && <p className="mt-1 text-xs text-emerald-600">Document selected</p>}
+            {errors.document && <p className="mt-1 text-xs text-rose-600">{errors.document.message}</p>}
           </label>
         )}
 

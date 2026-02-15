@@ -1,27 +1,18 @@
-# Quantix Dashboard — FinTech UI Kit
+# Quantix Dashboard (Runnable Demo)
 
-## Folder structure
-
-- `src/components/charts`
-  - `MetricCard.tsx`
-  - `LineChartCard.tsx`
-  - `CandlestickChartCard.tsx`
-  - `PieChartCard.tsx`
-- `src/components/kyc`
-  - `KYCWizard.tsx`
-- `src/components/transactions`
-  - `TransactionTable.tsx`
-  - `TransactionDetailModal.tsx`
-- `src/components/theme`
-  - `ThemeProvider.tsx`
-  - `ThemeToggle.tsx`
-- `src/types/fintech.ts`
-- `src/utils/csv.ts`
-- `src/App.tsx` example usage page
+This repository now runs without external package installation.
 
 ## Run
 
 ```bash
-npm install
 npm run dev
 ```
+
+Then open: `http://localhost:5173`
+
+## Included modules
+
+- Data visualization cards/charts (line, candlestick-style, pie)
+- KYC multi-step flow with progress/status
+- Transaction table with search and CSV export
+- Dark/light theme toggle
